@@ -38,16 +38,23 @@ def get_connection():
 
 
 # --------------------------------------------------
-# Завантаження даних
+# Завантаження даних з MS SQL Server
 # --------------------------------------------------
 @st.cache_data
-def load_data():
+def load_data_mssql():
     connection = get_connection()
     sql_path = Path(__file__).parent / "sql" / "01_sales_query.sql"
     query = sql_path.read_text(encoding="utf-8")
     df = connection.query(query)
     return df
-
+# --------------------------------------------------
+# Завантаження даних автономно з CSV
+# --------------------------------------------------
+@st.cache_data
+def load_data_csv():
+    # Параметр parse_dates автоматично конвертує вказані стовпчики з тексту в дати
+    df = pd.read_csv("sales_data.csv", parse_dates=["OrderDate"])
+    return df
 
 # --------------------------------------------------
 # Підготовка даних
@@ -76,7 +83,10 @@ def prepare_data(df):
 # --------------------------------------------------
 # Завантаження початкових даних
 # --------------------------------------------------
-df_raw = load_data()
+# df_raw = load_data_mssql()
+df_raw = load_data_csv()
+#df_raw.to_csv("sales_data.csv", index=False)
+
 df = prepare_data(df_raw)
 # --------------------------------------------------
 # Бічна панель (Sidebar) — Фільтри
