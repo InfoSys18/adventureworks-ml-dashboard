@@ -55,7 +55,6 @@ def load_data_csv():
     # Параметр parse_dates автоматично конвертує вказані стовпчики з тексту в дати
     df = pd.read_csv("sales_data.csv", parse_dates=["OrderDate"])
     return df
-
 # --------------------------------------------------
 # Підготовка даних
 # --------------------------------------------------
@@ -152,7 +151,7 @@ st.caption("Аналіз продажів на основі AdventureWorks2022")
 
 # Перевірка на випадок, якщо фільтри видали пустий датасет
 if df.empty:
-    st.warning("⚠️ Немає даних за обраний період.")
+    st.warning("⚠️ Немає даних за обраний період.")     # Точніше: Немає даних після фільтрування
     st.stop()
 
 # --------------------------------------------------
@@ -399,52 +398,82 @@ with tab_ml:
                 f"Помилка під час розрахунку моделі. Можливо, дані занадто зашумлені або специфічні для цієї категорії. Технічна помилка: {e}"
             )
 # --------------------------------------------------
-# Блок 2: Top-10 товарів (Дві колонки, лінійні діаграми)
+# Блок 2: Рейтинги ТОП-10 (Продукти та Території з перемикачем метрики)
 # --------------------------------------------------
 st.markdown("---")
-st.subheader("🏆 Top 10 Products Performance")
+st.subheader("🏆 Аналіз лідерів: ТОП-10 Продуктів та Територій")
 
-# Групуємо всі товари
-top_products = (
-    df.groupby("ProductName", as_index=False)
-    .agg(Sales=("SalesAmount", "sum"), Profit=("ProfitAmount", "sum"))
+# 1. Створюємо перемикач метрики вище графіків
+metric_choice = st.radio(
+    "Оберіть показник для аналізу ТОП-10:",
+    options=["Продажі ($)", "Прибуток ($)"],
+    horizontal=True
 )
 
-# Окремо відбираємо ТОП-10 за продажами та ТОП-10 за прибутком
-top10_sales = top_products.sort_values("Sales", ascending=True).tail(10)
-top10_profit = top_products.sort_values("Profit", ascending=True).tail(10)
+# Визначаємо, за яким стовпчиком будемо сортувати та яку назву виводити
+if metric_choice == "Продажі ($)":
+    sort_column = "Sales"
+    metric_label = "Sales"
+    color_scale = "Blues"
+else:
+    sort_column = "Profit"
+    metric_label = "Profit"
+    color_scale = "Greens"
 
+# 2. Готуємо дані для ТОП-10 Продуктів
+top_products_data = (
+    df.groupby("ProductName", as_index=False)
+    .agg(Sales=("SalesAmount", "sum"), Profit=("ProfitAmount", "sum"))
+    .sort_values(sort_column, ascending=True) # Ascending=True для правильного відображення в Plotly
+    .tail(10)
+)
+
+# 3. Готуємо дані для ТОП-10 Територій (Групуємо по Territory)
+top_territories_data = (
+    df.groupby("Territory", as_index=False)
+    .agg(Sales=("SalesAmount", "sum"), Profit=("ProfitAmount", "sum"))
+    .sort_values(sort_column, ascending=True)
+    .tail(10)
+)
+
+# 4. Виводимо графіки у дві колонки
 prod_col1, prod_col2 = st.columns(2)
 
 with prod_col1:
-    fig_prod_sales = px.bar(
-        top10_sales,
-        x="Sales",
+    fig_prod = px.bar(
+        top_products_data,
+        x=sort_column,
         y="ProductName",
         orientation="h",
-        color="Sales",
-        color_continuous_scale="Blues",
-        title="Top 10 Products by Sales",
+        color=sort_column,
+        color_continuous_scale=color_scale,
+        title=f"ТОП-10 Продуктів за показником {metric_choice}",
+        labels={sort_column: metric_choice, "ProductName": "Продукт"}
     )
-    fig_prod_sales.update_layout(
-        margin=dict(l=20, r=20, t=30, b=20), coloraxis_showscale=False
+    fig_prod.update_layout(
+        margin=dict(l=20, r=20, t=40, b=20),
+        coloraxis_showscale=False,
+        height=400
     )
-    st.plotly_chart(fig_prod_sales, use_container_width=True)
+    st.plotly_chart(fig_prod, use_container_width=True)
 
 with prod_col2:
-    fig_prod_profit = px.bar(
-        top10_profit,
-        x="Profit",
-        y="ProductName",
+    fig_terr = px.bar(
+        top_territories_data,
+        x=sort_column,
+        y="Territory",
         orientation="h",
-        color="Profit",
-        color_continuous_scale="Greens",
-        title="Top 10 Products by Profit",
+        color=sort_column,
+        color_continuous_scale=color_scale,
+        title=f"ТОП-10 Територій за показником {metric_choice}",
+        labels={sort_column: metric_choice, "Territory": "Територія/Регіон"}
     )
-    fig_prod_profit.update_layout(
-        margin=dict(l=20, r=20, t=30, b=20), coloraxis_showscale=False
+    fig_terr.update_layout(
+        margin=dict(l=20, r=20, t=40, b=20),
+        coloraxis_showscale=False,
+        height=400
     )
-    st.plotly_chart(fig_prod_profit, use_container_width=True)
+    st.plotly_chart(fig_terr, use_container_width=True)
 
 # --------------------------------------------------
 # Блок 3: Сегментація клієнтів (RFM + K-Means)
