@@ -2,6 +2,10 @@
 
 An interactive Business Intelligence and Machine Learning web application built with **Python**, **Streamlit**, and **Plotly**, integrated with the **AdventureWorks2022** MS SQL database.
 
+## 🔗 Live Demo
+Check out the live interactive dashboard here: 
+👉 [AdventureWorks ML Dashboard](https://adventureworks-ml-dashboard-rnthcufm2f5eiszktkutv7.streamlit.app/)
+
 ## 🚀 Features
 
 - **Dynamic BI Analytics:** Multi-tab interface for tracking Sales, Profit, and Profit Margin performance.
@@ -21,8 +25,8 @@ An interactive Business Intelligence and Machine Learning web application built 
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com
-   cd YOUR_REPOSITORY_NAME
+   git clone https://github.com/InfoSys18/adventureworks-ml-dashboard
+   cd adventureworks-ml-dashboard
    ```
 
 2. **Create and activate a virtual environment:**
@@ -39,10 +43,7 @@ An interactive Business Intelligence and Machine Learning web application built 
    pip install -r requirements.txt
    ```
 
-4. **Configure your Database Connection:**
-   Create a `.streamlit/secrets.toml` file to store your local SQL Server credentials securely.
-
-5. **Run the application:**
+4. **Run the application:**
    ```bash
    streamlit run app.py
    ```

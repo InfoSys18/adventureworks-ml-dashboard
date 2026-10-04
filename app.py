@@ -403,14 +403,14 @@ with tab_ml:
 st.markdown("---")
 st.subheader("🏆 Аналіз лідерів: ТОП-10 Продуктів та Територій")
 
-# 1. Створюємо перемикач метрики вище графіків
+# 1. Створення селектора метрики вище графіків
 metric_choice = st.radio(
     "Оберіть показник для аналізу ТОП-10:",
     options=["Продажі ($)", "Прибуток ($)"],
     horizontal=True
 )
 
-# Визначаємо, за яким стовпчиком будемо сортувати та яку назву виводити
+# Визначення стовпчика сортування та назви
 if metric_choice == "Продажі ($)":
     sort_column = "Sales"
     metric_label = "Sales"
@@ -420,7 +420,7 @@ else:
     metric_label = "Profit"
     color_scale = "Greens"
 
-# 2. Готуємо дані для ТОП-10 Продуктів
+# 2. Підготовка даних для ТОП-10 Продуктів
 top_products_data = (
     df.groupby("ProductName", as_index=False)
     .agg(Sales=("SalesAmount", "sum"), Profit=("ProfitAmount", "sum"))
@@ -428,7 +428,7 @@ top_products_data = (
     .tail(10)
 )
 
-# 3. Готуємо дані для ТОП-10 Територій (Групуємо по Territory)
+# 3. Підготовка даних для ТОП-10 Територій (Групуємо по Territory)
 top_territories_data = (
     df.groupby("Territory", as_index=False)
     .agg(Sales=("SalesAmount", "sum"), Profit=("ProfitAmount", "sum"))
@@ -436,7 +436,7 @@ top_territories_data = (
     .tail(10)
 )
 
-# 4. Виводимо графіки у дві колонки
+# 4. Вивід графіків у дві колонки
 prod_col1, prod_col2 = st.columns(2)
 
 with prod_col1:
