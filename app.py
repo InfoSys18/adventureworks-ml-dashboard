@@ -203,18 +203,70 @@ with tab_volumes:
         monthly.index = monthly.index.to_period("M").astype(str)
         monthly = monthly.reset_index()
 
-        fig_trend = px.line(
-            monthly,
-            x="OrderDate",
-            y=["Sales", "Profit"],
-            labels={"value": "Amount ($)", "OrderDate": "Month"},
-            color_discrete_sequence=["#1f77b4", "#2ca02c"],
+        # Використовуємо go.Scatter та make_subplots для двох осей Y
+        import plotly.graph_objects as go
+        from plotly.subplots import make_subplots
+
+        fig_trend = make_subplots(specs=[[{"secondary_y": True}]])
+
+        # Лінія продажів/виручки (ліва вісь)
+        fig_trend.add_trace(
+            go.Scatter(
+                x=monthly["OrderDate"],
+                y=monthly["Sales"],
+                name="Продажі ($)",
+                line=dict(color="#1f77b4", width=3)
+            ),
+            secondary_y=False,
         )
+
+        # Лінія прибутку (права вісь)
+        fig_trend.add_trace(
+            go.Scatter(
+                x=monthly["OrderDate"],
+                y=monthly["Profit"],
+                name="Прибуток ($)",
+                line=dict(color="#2ca02c", width=3)  # Гарний зелений колір для прибутку
+            ),
+            secondary_y=True,
+        )
+
+        # Стилізуємо макет
         fig_trend.update_layout(
             margin=dict(l=20, r=20, t=20, b=20),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            hovermode="x unified",
+            height=350
         )
+
+        # Налаштовуємо назви та формат осей
+        fig_trend.update_yaxes(title_text="Сума продажів ($)", secondary_y=False)
+        fig_trend.update_yaxes(title_text="Сума прибутку ($)", secondary_y=True)
+
         st.plotly_chart(fig_trend, use_container_width=True)
+
+    # with col_vol1:
+    #     st.subheader("📈 Monthly Sales Trend")
+    #     monthly = (
+    #         df.set_index("OrderDate")
+    #         .resample("ME")
+    #         .agg(Sales=("SalesAmount", "sum"), Profit=("ProfitAmount", "sum"))
+    #     )
+    #     monthly.index = monthly.index.to_period("M").astype(str)
+    #     monthly = monthly.reset_index()
+    #
+    #     fig_trend = px.line(
+    #         monthly,
+    #         x="OrderDate",
+    #         y=["Sales", "Profit"],
+    #         labels={"value": "Amount ($)", "OrderDate": "Month"},
+    #         color_discrete_sequence=["#1f77b4", "#2ca02c"],
+    #     )
+    #     fig_trend.update_layout(
+    #         margin=dict(l=20, r=20, t=20, b=20),
+    #         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    #     )
+    #     st.plotly_chart(fig_trend, use_container_width=True)
 
     with col_vol2:
         st.subheader("🍕 Sales & Profit by Category")
@@ -436,7 +488,7 @@ top_territories_data = (
     .tail(10)
 )
 
-# 4. Вивід графіків у дві колонки
+# 4. Вивід графіків у дві колонки з підписами на кінцях
 prod_col1, prod_col2 = st.columns(2)
 
 with prod_col1:
@@ -447,6 +499,8 @@ with prod_col1:
         orientation="h",
         color=sort_column,
         color_continuous_scale=color_scale,
+        # Додаємо текст: беремо значення, ділимо на 1 млн та форматуємо як "$1.2M"
+        text=(top_products_data[sort_column] / 1e6).map("${:.1f}M".format),
         title=f"ТОП-10 Продуктів за показником {metric_choice}",
         labels={sort_column: metric_choice, "ProductName": "Продукт"}
     )
@@ -455,6 +509,8 @@ with prod_col1:
         coloraxis_showscale=False,
         height=400
     )
+    # Змушуємо Plotly винести цифри за межі стовпчиків
+    fig_prod.update_traces(textposition="outside")
     st.plotly_chart(fig_prod, use_container_width=True)
 
 with prod_col2:
@@ -465,6 +521,8 @@ with prod_col2:
         orientation="h",
         color=sort_column,
         color_continuous_scale=color_scale,
+        # Аналогічно додаємо текст для територій
+        text=(top_territories_data[sort_column] / 1e6).map("${:.1f}M".format),
         title=f"ТОП-10 Територій за показником {metric_choice}",
         labels={sort_column: metric_choice, "Territory": "Територія/Регіон"}
     )
@@ -473,6 +531,8 @@ with prod_col2:
         coloraxis_showscale=False,
         height=400
     )
+    # Змушуємо Plotly винести цифри за межі стовпчиків
+    fig_terr.update_traces(textposition="outside")
     st.plotly_chart(fig_terr, use_container_width=True)
 
 # --------------------------------------------------
